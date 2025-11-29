@@ -1,0 +1,30 @@
+{
+  "name": "logopull",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "start:prod": "NODE_ENV=production node server/index.js"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "@clerk/clerk-js": "^5.111.0",
+    "@clerk/express": "^1.7.53",
+    "@tailwindcss/vite": "^4.1.17",
+    "axios": "^1.7.7",
+    "cheerio": "^1.0.0",
+    "concurrently": "^9.0.1",
+    "cors": "^2.8.5",
+    "daisyui": "^5.5.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.19.2",
+    "tailwindcss": "^4.1.17"
+  }
+}
