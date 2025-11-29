@@ -57,71 +57,85 @@ npm run server   # Backend only (port 5174)
 
 The application will be available at `http://localhost:5173`
 
-## Azure Deployment
+## Docker Deployment
 
-### Option 1: Using Azure Developer CLI (azd)
+### Local Docker Development
 
-1. **Install Azure Developer CLI**:
+1. **Build and run with Docker Compose**:
    ```bash
-   # macOS
-   brew tap azure/azd && brew install azd
+   docker-compose up
+   ```
+   The app will be available at `http://localhost:8080`
+
+2. **Or build and run manually**:
+   ```bash
+   npm run docker:build
+   npm run docker:run
+   ```
+
+### Production Deployment
+
+#### Option 1: Azure Container Instances (Simple)
+
+1. **Build and push to Azure Container Registry**:
+   ```bash
+   # Create resource group and container registry
+   az group create --name logopull-rg --location eastus
+   az acr create --resource-group logopull-rg --name logopullregistry --sku Basic
    
-   # Or follow instructions at: https://aka.ms/azure-dev/install
+   # Build and push image
+   az acr build --registry logopullregistry --image logopull:latest .
+   
+   # Deploy container
+   az container create \
+     --resource-group logopull-rg \
+     --name logopull \
+     --image logopullregistry.azurecr.io/logopull:latest \
+     --dns-name-label logopull-unique \
+     --ports 8080 \
+     --registry-login-server logopullregistry.azurecr.io \
+     --environment-variables \
+       NODE_ENV=production \
+       PORT=8080 \
+       CLERK_SECRET_KEY='your-secret-key' \
+       VITE_CLERK_PUBLISHABLE_KEY='your-publishable-key' \
+       CLERK_PUBLISHABLE_KEY='your-publishable-key'
    ```
 
-2. **Login to Azure**:
+#### Option 2: Azure App Service with Docker
+
+1. **Deploy using Bicep template**:
    ```bash
-   azd auth login
-   ```
-
-3. **Provision and Deploy**:
-   ```bash
-   azd provision
-   azd deploy
-   ```
-
-4. **Set Environment Variables**:
-   After deployment, set your Clerk keys in Azure Portal:
-   - Go to your App Service → Configuration → Application settings
-   - Add:
-     - `VITE_CLERK_PUBLISHABLE_KEY` = your Clerk publishable key
-     - `CLERK_SECRET_KEY` = your Clerk secret key
-   - Save and restart the app
-
-5. **Update Clerk Dashboard**:
-   - Add your Azure App Service URL to allowed origins in Clerk dashboard
-   - Example: `https://your-app-name.azurewebsites.net`
-
-### Option 2: Manual Azure Deployment
-
-1. **Build the Application**:
-   ```bash
-   npm run build
-   ```
-
-2. **Create Azure Resources**:
-   ```bash
-   # Using Azure CLI
-   az group create --name logoPull-rg --location eastus
+   az group create --name logopull-rg --location eastus
    az deployment group create \
-     --resource-group logoPull-rg \
-     --template-file infra/main.bicep \
-     --parameters @infra/main.parameters.json
+     --resource-group logopull-rg \
+     --template-file infra/main-container.bicep \
+     --parameters dockerImage='your-registry/logopull:latest'
    ```
 
-3. **Deploy to App Service**:
+2. **Set environment variables in Azure Portal**:
+   - Go to App Service → Configuration → Application settings
+   - Add your Clerk keys
+
+#### Option 3: CI/CD with GitHub Actions
+
+1. **Set up GitHub Secrets**:
+   - Go to your GitHub repo → Settings → Secrets and variables → Actions
+   - Add:
+     - `AZURE_CREDENTIALS` (Azure service principal JSON)
+     - `AZURE_RESOURCE_GROUP` (your resource group name)
+     - `CLERK_SECRET_KEY`
+     - `VITE_CLERK_PUBLISHABLE_KEY`
+
+2. **Push to main branch**:
    ```bash
-   # Install Azure Functions Core Tools if needed
-   az webapp up \
-     --name your-app-name \
-     --resource-group logoPull-rg \
-     --runtime "NODE:20-lts" \
-     --startup-file "node server/index.js"
+   git push origin main
    ```
+   GitHub Actions will automatically build and deploy!
 
-4. **Set Environment Variables** (same as Option 1)
-
-5. **Update Clerk Dashboard** (same as Option 1)
+3. **Update Clerk Dashboard**:
+   - Add your Azure App Service URL to allowed origins
+   - Example: `https://logopull-app.azurewebsites.net`
 
 ## Project Structure
 
