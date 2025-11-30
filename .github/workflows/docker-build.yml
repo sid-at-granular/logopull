@@ -51,4 +51,6 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+        secrets: |
+          "VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}"
 

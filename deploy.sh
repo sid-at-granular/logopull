@@ -34,7 +34,7 @@ npm run build
 
 # Build Docker image
 echo -e "${YELLOW}🐳 Building Docker image...${NC}"
-docker build -t logopull:latest .
+docker build --build-arg VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" -t logopull:latest .
 
 echo -e "${GREEN}✅ Build complete!${NC}"
 echo ""
